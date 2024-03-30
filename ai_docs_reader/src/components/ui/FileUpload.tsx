@@ -1,10 +1,28 @@
 'use client'
 import { uploadToS3 } from '@/lib/s3';
-import { Inbox } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { Inbox, Loader2 } from 'lucide-react';
 import React from 'react'
 import { useDropzone } from 'react-dropzone'
+import axios from 'axios'
+import toast from 'react-hot-toast';
 
 const FileUpload = () => {
+    const [ uploading, setUploading ] = React.useState(false);
+
+    const { mutate, isPending } = useMutation({
+        mutationFn: async ({
+            file_key,
+            file_name,
+        }: {
+            file_key: string;
+            file_name: string;
+        }) => {
+            const response = await axios.post("/api/create-chat", {file_key, file_name});
+            return response.data;
+        },
+    });
+
     const {getRootProps, getInputProps} = useDropzone({
         accept: {'application/pdf': [".pdf"]},
         maxFiles: 1,
@@ -13,15 +31,29 @@ const FileUpload = () => {
             const file  = acceptedFiles[0];
             if (file.size > 10 * 1024 * 1024) {
                 //When the file is bigger than 10 mb
-                alert("Please upload a file smaller than 10 mb");
+                toast.error("File is too big!, please pick a file smaller than 10mb")
                 return;
             }
 
             try {
+                setUploading(true)
                 const data = await uploadToS3(file);
-                console.log("data", data);
+                if (!data?.file_key || !data.file_name) {
+                    toast.error("Something went wrong uploading your file")
+                    return;
+                }
+                mutate(data, {
+                    onSuccess: (data) => {
+                        toast.success(data.message);
+                    },
+                    onError: (err) => {
+                        toast.error("Error creating chat")
+                    },
+                });
             } catch (error) {
                 console.log(error);
+            } finally {
+                setUploading(false);
             }
         },
     });
@@ -31,10 +63,20 @@ const FileUpload = () => {
                 "border-dashed border-2 rounded-xl cursor-pointer bg-gray-50 py-8 flex justify-center items-center flex-col",
         })}>
             <input {...getInputProps()} />
-            <>
-            <Inbox className='w-10 h-10 text-blue-500' />
-            <p className='mt-2 text-sm text-slate-400'>Drop Document Here</p>
-            </>
+            {uploading || isPending ?(
+                <>
+                    {/* loading state */}
+                    <Loader2 className='w-10 h-10 text-blue-500' />
+                    <p className='mt-2 text-sm text-slate-400'>
+                        Spilling the tea to GPT...
+                    </p>
+                </>
+            ) : (
+                <>
+                    <Inbox className='w-10 h-10 text-blue-500' />
+                    <p className='mt-2 text-sm text-slate-400'>Drop Document Here</p>
+                </>
+            )}
         </div>
     </div>;
 }; 
