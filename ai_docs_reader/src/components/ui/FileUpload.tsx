@@ -2,12 +2,14 @@
 import { uploadToS3 } from '@/lib/s3';
 import { useMutation } from '@tanstack/react-query';
 import { Inbox, Loader2 } from 'lucide-react';
-import React from 'react'
-import { useDropzone } from 'react-dropzone'
-import axios from 'axios'
+import React from 'react';
+import { useDropzone } from 'react-dropzone';
+import axios from "axios";
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const FileUpload = () => {
+    const router = useRouter();
     const [ uploading, setUploading ] = React.useState(false);
 
     const { mutate, isPending } = useMutation({
@@ -18,7 +20,10 @@ const FileUpload = () => {
             file_key: string;
             file_name: string;
         }) => {
-            const response = await axios.post("/api/create-chat", {file_key, file_name});
+            const response = await axios.post("/api/chat-create", {
+                file_key,
+                file_name,
+              });
             return response.data;
         },
     });
@@ -34,7 +39,6 @@ const FileUpload = () => {
                 toast.error("File is too big!, please pick a file smaller than 10mb")
                 return;
             }
-
             try {
                 setUploading(true)
                 const data = await uploadToS3(file);
@@ -43,11 +47,13 @@ const FileUpload = () => {
                     return;
                 }
                 mutate(data, {
-                    onSuccess: (data) => {
-                        toast.success(data.message);
+                    onSuccess: (chat_id) => {
+                        toast.success("Chat created successfully");
+                        router.push('/chat/${chat_id}')
                     },
                     onError: (err) => {
                         toast.error("Error creating chat")
+                        console.log(err);
                     },
                 });
             } catch (error) {
