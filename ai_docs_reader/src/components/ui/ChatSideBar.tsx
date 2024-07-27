@@ -6,13 +6,15 @@ import { PlusCircle, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import axios from "axios";
 import { Button } from './button';
+import SubscriptionButton from "./SubscriptionButton";
 
 type Props = {
     chats: DrizzleChat[],
     chatId: number,
+    isPro: boolean;
 }
 
-const ChatSideBar = ({chats, chatId}: Props) => {
+const ChatSideBar = ({chats, chatId, isPro}: Props) => {
     return (
         <div className='w-full max-h-screen overflow-scroll soff p-4 text-gray-200 bg-gray-900'>
             <Link href='/'>
