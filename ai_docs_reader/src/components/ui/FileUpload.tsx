@@ -42,17 +42,18 @@ const FileUpload = () => {
             try {
                 setUploading(true)
                 const data = await uploadToS3(file);
+                console.log("Pinecone data", data);
                 if (!data?.file_key || !data.file_name) {
-                    toast.error("Something went wrong uploading your file")
+                    toast.error("Something went wrong uploading your file");
                     return;
                 }
                 mutate(data, {
-                    onSuccess: (chat_id) => {
+                    onSuccess: ({ chat_id }) => {
                         toast.success("Chat created successfully");
-                        router.push('/chat/${chat_id}')
+                        router.push(`/chat/${chat_id}`);
                     },
                     onError: (err) => {
-                        toast.error("Error creating chat")
+                        toast.error("Error creating chat");
                         console.log(err);
                     },
                 });

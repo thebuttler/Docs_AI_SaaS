@@ -11,6 +11,8 @@ export const chats = pgTable("chats", {
     filekey: text("file_key").notNull()
 })
 
+export type DrizzleChat = typeof chats.$inferSelect;
+
 export const messages = pgTable("messsages", {
     id: serial("id").primaryKey(),
     chatId: integer("chat_id").references(()=> chats.id).notNull(),
@@ -18,4 +20,16 @@ export const messages = pgTable("messsages", {
     createdAt: timestamp("created_at").notNull().defaultNow(),
     role: userSystemEnum("role").notNull()
 })
+
+export const userSubscriptions = pgTable("user_authentication", {
+    id: serial("id").primaryKey(),
+    userId: varchar("user_id", { length: 256 }).notNull().unique(),
+    stripeCustomerId: varchar("stripe_customer_id", { length: 256 }).notNull().unique(),
+    stripeSubscriptionId: varchar("stripe_subscription_id", { length: 256 }).unique(),
+    stripePriceId: varchar("stripe_price_id", { length: 256 }),
+    stripeCurrentPeriodEnd: timestamp("stripe_current_period_ended_at"),
+});
+
+//drizzle-orm
+//drizzle-kit
 

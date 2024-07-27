@@ -6,14 +6,14 @@ import { getEmbeddings } from "./embeddings"
 import md5 from "md5"
 import { convertToAscii } from "./utils"
 
-let pinecone: Pinecone | null = null
-
 // get pinecone client credentials
-
-export const getPineconeClient = async () =>{
+export const getPineconeClient = () =>{
     return new Pinecone ({
         apiKey: process.env.PINECONE_API_KEY!,
-        environment: process.env.PINECONE_ENVIRONMENT!
+        // Pinecone no longer requires the environment to be part the the connection
+        // latest SDK update connect to a global control plane instead. This meas a single
+        // can now be hosted in indexes in different regions, and only the API key is needed.
+        //environment: process.env.PINECONE_ENVIRONMENT!,
     });
 };
 
@@ -70,10 +70,10 @@ async function embedDocument(doc: Document) {
     }
 }
 
-export const truncateStringByBytes = (srt: string, bytes: number) => {
+export const truncateStringByBytes = (str: string, bytes: number) => {
     const enc = new TextEncoder();
     return new TextDecoder("utf-8").decode(enc.encode(str).slice(0, bytes));
-}
+};
 
 async function prepareDocumet(page: PDFPage){
     let { pageContent, metadata } = page;
